@@ -133,8 +133,21 @@ runcmd(struct cmd *cmd)
 int
 getcmd(char *buf, int nbuf)
 {
+  // Print dollar sign prompt to console
   fprintf(2, "$ ");
+
+  // buf is a character array, nbuf is the size of that character array
+
+  /*
+    Usage: memset(void* str, int c, size_t n)
+    Memset copies the character c into the first n bytes of the string pointed to by str.
+
+    Here, we are initializing buf to be a string of null characters (0 is the same as \0)
+  */
   memset(buf, 0, nbuf);
+
+  // Reads from stdin until a newline is read in (or nbuf characters is reached)
+
   gets(buf, nbuf);
   if(buf[0] == 0) // EOF
     return -1;
@@ -156,6 +169,8 @@ main(void)
   }
 
   // Read and run input commands.
+
+  // Copies entire line in stdin into buf
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
       // Chdir must be called by the parent, not the child.
@@ -164,6 +179,7 @@ main(void)
         fprintf(2, "cannot cd %s\n", buf+3);
       continue;
     }
+    // Fork and run command in child process so that shell keeps running
     if(fork1() == 0){
       runcmd(parsecmd(buf));
     }
@@ -313,6 +329,7 @@ peek(char **ps, char *es, char *toks)
 {
   char *s;
 
+  // 
   s = *ps;
   while(s < es && strchr(whitespace, *s))
     s++;
@@ -328,9 +345,17 @@ struct cmd *nulterminate(struct cmd*);
 struct cmd*
 parsecmd(char *s)
 {
+  // s is the line of input passed in as a command
   char *es;
+
+  /* Pointer to cmd struct:
+  struct cmd {
+    int type;
+  }
+  */ 
   struct cmd *cmd;
 
+  // End of command string;
   es = s + strlen(s);
   cmd = parseline(&s, es);
   peek(&s, es, "");
@@ -345,6 +370,7 @@ parsecmd(char *s)
 struct cmd*
 parseline(char **ps, char *es)
 {
+  // Cmd struct
   struct cmd *cmd;
 
   cmd = parsepipe(ps, es);
