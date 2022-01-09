@@ -31,6 +31,13 @@ fetchstr(uint64 addr, char *buf, int max)
   return strlen(buf);
 }
 
+
+// Arguments need to be passed from user space to kernel space
+// Arguments are stored in registers in the process' trapframe.
+// The trapframe stores a subset of the registers used in userspace when a system interrupt happens,
+// or when a system call is executed (switch from user space to kernel space)
+
+// Retrieves n'th argument passed in user space
 static uint64
 argraw(int n)
 {
@@ -104,6 +111,8 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_trace(void);
+extern uint64 sys_info(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -127,6 +136,36 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
+[SYS_sysinfo] sys_info
+};
+
+
+// Syscall names for sys_trace
+char* syscall_names[23] = {
+ "fork",
+ "exit",
+ "wait",
+ "pipe",
+ "read",
+ "kill",
+ "exec",
+ "fstat",
+ "chdir",
+ "dup",
+ "getpid",
+ "sbrk",
+ "sleep",
+ "uptime",
+ "open",
+ "write",
+ "mknod",
+ "unlink",
+ "link",
+ "mkdir",
+ "close",
+ "trace",
+ "info"
 };
 
 void
@@ -138,6 +177,10 @@ syscall(void)
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
+    // Check if syscall is flagged for trace
+    if(p->trace_mask & (1 << (num))){
+      printf("%d: syscall %s -> %d\n", p->pid, syscall_names[num - 1], p->trapframe->a0);
+    } 
   } else {
     printf("%d %s: unknown sys call %d\n",
             p->pid, p->name, num);

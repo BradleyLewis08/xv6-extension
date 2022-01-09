@@ -8,8 +8,11 @@
 
 struct cpu cpus[NCPU];
 
+
+// Process list with maximum number of processes
 struct proc proc[NPROC];
 
+// Initial proccess
 struct proc *initproc;
 
 int nextpid = 1;
@@ -50,6 +53,7 @@ procinit(void)
   
   initlock(&pid_lock, "nextpid");
   initlock(&wait_lock, "wait_lock");
+  // Allocate a kernel stack for each process in the process table
   for(p = proc; p < &proc[NPROC]; p++) {
       initlock(&p->lock, "proc");
       p->kstack = KSTACK((int) (p - proc));
@@ -314,6 +318,9 @@ fork(void)
   acquire(&np->lock);
   np->state = RUNNABLE;
   release(&np->lock);
+
+  // Copy trace mask from parent to child
+  np->trace_mask=p->trace_mask;
 
   return pid;
 }
@@ -653,4 +660,17 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+int get_nproc(void){
+  struct proc *p;
+  int nproc = 0;
+
+  // Look through the proc table for all procs that are not UNUSED
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->state != UNUSED){
+      nproc++;
+    }
+  }
+  return nproc;
 }

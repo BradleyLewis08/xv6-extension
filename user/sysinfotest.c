@@ -61,7 +61,7 @@ testmem() {
     printf("FAIL: free mem %d (bytes) instead of %d\n", n-PGSIZE, info.freemem);
     exit(1);
   }
-  
+
   if((uint64)sbrk(-PGSIZE) == 0xffffffffffffffff){
     printf("sbrk failed");
     exit(1);

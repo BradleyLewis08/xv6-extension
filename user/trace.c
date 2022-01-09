@@ -3,6 +3,13 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
+
+// we need a way to check which bits are set
+// in order to see which syscalls we need to trace
+
+// We could AND the mask with 2^32 and keep left shifting, keeping track of how many times we left shift
+
+
 int
 main(int argc, char *argv[])
 {
